@@ -1,10 +1,11 @@
-const express = require("express");
-const router = express.Router();
-const pool = require("../db");
+import express from "express";
+import pool from "../db.js ";
+import { format } from "date-fns";
 const formatDate = (date) => {
   if (!date) return null;
-  return date; 
+  return format(date, "yyyy-MM-dd"); 
 };
+const router = express.Router();
 
 
 router.get("/", async (req, res) => {
@@ -311,4 +312,4 @@ const {
   }
 });
 
-module.exports = router;
+export default router;

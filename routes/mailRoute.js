@@ -1,8 +1,12 @@
-const express = require("express");
-const nodemailer = require("nodemailer");
-const multer = require("multer");
-const { v4: uuidv4 } = require("uuid");
-require("dotenv").config();
+import express from "express";
+import nodemailer from "nodemailer";
+import multer from "multer";
+import dotenv from "dotenv";
+
+import { v4 as uuidv4 } from "uuid";
+
+
+dotenv.config();
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -141,4 +145,4 @@ router.post("/send-mail", upload.single("pdf"), async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
