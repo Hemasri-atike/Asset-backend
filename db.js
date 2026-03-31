@@ -5,21 +5,48 @@ dotenv.config();
 
 const { Pool } = pkg;
 
-const pool = new Pool({
+// 🔹 Common config
+const commonConfig = {
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
+};
+
+// 🔹 Create pools for each DB
+const assetAMS = new Pool({
+  ...commonConfig,
+  database: process.env.DB_ASSETAMS,
 });
 
-pool.connect((err, client, release) => {
-  if (err) {
-    console.error("❌ Database connection failed:", err.message);
-  } else {
-    console.log("✅ Connected to PostgreSQL database");
-    release();
+const assetSAP = new Pool({
+  ...commonConfig,
+  database: process.env.DB_ASSETSAP,
+});
+
+const assetCommon = new Pool({
+  ...commonConfig,
+  database: process.env.DB_ASSETCOMMON,
+});
+
+// 🔹 Function to test connections
+const testConnection = async (pool, name) => {
+  try {
+    await pool.query("SELECT 1");
+    console.log(`✅ Connected to ${name}`);
+  } catch (err) {
+    console.error(`❌ Connection failed (${name}):`, err.message);
   }
-});
+};
 
-export default pool;
+// 🔹 Test all DBs
+testConnection(assetAMS, "ASSETAMS");
+testConnection(assetSAP, "ASSETSAP");
+testConnection(assetCommon, "ASSETCOMMON");
+
+// 🔹 Export all DBs in one place
+export default {
+  assetAMS,
+  assetSAP,
+  assetCommon,
+};

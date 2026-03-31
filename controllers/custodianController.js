@@ -1,37 +1,39 @@
-import pool from "../db.js";
+import db from "../db.js";
+const pool = db.assetAMS;
 
 /* ADD CUSTODIAN */
-export const addCustodian = async (req, res) => {
+ const addCustodian = async (req, res) => {
   try {
     const {
       custodianId,
       custodianName,
       department,
       designation,
-     reporting_authority,
+     reportingAuthority,
       email,
       userName,
       phone,
       password
     } = req.body;
 
-    const newCustodian = await pool.query(
-      `INSERT INTO custodians
-      (custodian_id,custodian_name,department,designation,reporting_authority,email,username,phone,password)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
-      RETURNING *`,
-      [
-        custodianId,
-        custodianName,
-        department,
-        designation,
-        reporting_authority,
-        email,
-        userName,
-        phone,
-        password
-      ]
-    );
+  const newCustodian = await pool.query(
+  `INSERT INTO custodians
+  (custodian_id,custodian_name,department,designation,reporting_authority,email,username,phone,password,status)
+  VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+  RETURNING *`,
+  [
+    custodianId,
+    custodianName,
+    department,
+    designation,
+    reportingAuthority,
+    email,
+    userName,
+    phone,
+    password,
+    "active"   // ✅ NEW
+  ]
+);
 
     res.json(newCustodian.rows[0]);
   } catch (error) {
@@ -40,11 +42,12 @@ export const addCustodian = async (req, res) => {
   }
 };
 
+
 /* GET ALL CUSTODIANS */
-export const getCustodians = async (req, res) => {
+ const getCustodians = async (req, res) => {
   try {
     const allCustodians = await pool.query(
-      "SELECT * FROM custodians ORDER BY id DESC"
+     "SELECT * FROM custodians WHERE status = 'active' ORDER BY id DESC"
     );
 
     res.json(allCustodians.rows);
@@ -54,7 +57,7 @@ export const getCustodians = async (req, res) => {
   }
 };
 /* UPDATE CUSTODIAN */
-export const updateCustodian = async (req, res) => {
+ const updateCustodian = async (req, res) => {
   try {
 
     const { id } = req.params;
@@ -75,7 +78,8 @@ export const updateCustodian = async (req, res) => {
            custodian_name=$2,
            department=$3,
            designation=$4,
-           reporting_authority=$5,
+         
+              reporting_authority=$5,
            email=$6,
            username=$7
        WHERE id=$8
@@ -85,7 +89,7 @@ export const updateCustodian = async (req, res) => {
         custodianName,
         department,
         designation,
-        authority,
+        reportingAuthority,
         email,
         username,
         id
@@ -99,22 +103,27 @@ export const updateCustodian = async (req, res) => {
     res.status(500).json("Server Error");
   }
 };
-export const deleteCustodian = async (req, res) => {
+const deleteCustodian = async (req, res) => {
   try {
-
     const { id } = req.params;
 
     await pool.query(
-      "DELETE FROM custodians WHERE id=$1",
+      `UPDATE custodians
+       SET status = 'inactive'
+       WHERE id = $1`,
       [id]
     );
 
-    res.json("Custodian deleted successfully");
+    res.json("Custodian deactivated successfully");
 
   } catch (error) {
-
     console.error(error.message);
     res.status(500).json("Server Error");
-
   }
+};
+export {
+  addCustodian,
+  getCustodians,
+  updateCustodian,
+  deleteCustodian
 };

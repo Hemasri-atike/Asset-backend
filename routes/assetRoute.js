@@ -1,5 +1,5 @@
 import express from "express";
-import pool from "../db.js ";
+import db from "../db.js";
 import { format } from "date-fns";
 const formatDate = (date) => {
   if (!date) return null;
@@ -10,38 +10,43 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        id AS "id",
-        asset_id AS "assetId",
-        asset_number AS "assetNumber",
-        sub_asset_number AS "subAssetNumber",
-        asset_class AS "assetClass",
-        asset_description AS "assetDescription",
-        intender_name AS "intenderName",
-        custodian_name AS "custodianName",
-        serial_number AS "serialNumber",
-        mac_id AS "macId",
-        location_id AS "locationId",
-        block AS "block",
-        model AS "model",
-        gr_number AS "grNumber",
-        year_of_purchase AS "yearOfPurchase",
-        capitalization_date AS "capitalizationDate",
-        expiry_date AS "expiryDate",
-        cost_center AS "costCenter",
-        material_number AS "materialNumber",
-        accept_date AS "acceptDate",
-        po_number AS "poNumber",
-        wbs_number AS "wbsNumber",
-        installation_date AS "installationDate",
-        asset_vendor AS "assetVendor",
-        department AS "department",
-        remarks AS "remarks",
-        created_at AS "createdAt"
-      FROM public.assets
-      ORDER BY id DESC;
-    `);
+    const result = await db.assetSAP.query(`
+  SELECT
+    "SLNO" AS "id",
+    "AssetID" AS "assetId",
+    "Latitude" AS "latitude",
+"Longitude" AS "longitude",
+"Location" AS "location",
+"Status" AS "status",
+"LocationDesc" AS "locationDesc",
+"AssetDesc" AS "assetDesc",
+    "MainAssetNumber" AS "assetNumber",
+    "AssetSubNumber" AS "subAssetNumber",
+    "AssetClass" AS "assetClass",
+    "AssetDescription" AS "assetDescription",
+    "Indentor" AS "intenderName",
+    "AssetOwner" AS "custodianName",
+    "SerialNumber" AS "serialNumber",
+    "MACID" AS "macId",
+    "LocationID" AS "locationId",
+    "BLOCK" AS "block",
+    "Model" AS "model",
+    "GRNumber" AS "grNumber",
+    "YearofPurchase" AS "yearOfPurchase",
+    "CapitalizationDate" AS "capitalizationDate",
+    "ExpiryDate" AS "expiryDate",
+    "CostCenter" AS "costCenter",
+    "MaterialNumber" AS "materialNumber",
+    "AcceptDatebyUser" AS "acceptDate",
+    "POID" AS "poNumber",
+    "WBSNumberforReference" AS "wbsNumber",
+    "InstallationDateforReference" AS "installationDate",
+    "AssetSupplier" AS "assetVendor",
+    "Department" AS "department",
+    "Remarks" AS "remarks"
+  FROM public."AssetMaster"
+  ORDER BY "SLNO" DESC;
+`);
 
     res.json(result.rows);
   } catch (error) {
@@ -80,72 +85,77 @@ router.post("/", async (req, res) => {
   remarks,
 } = req.body;
 
-    const result = await pool.query(
-      `
-      INSERT INTO public.assets (
-        asset_id,
-        asset_number,
-        sub_asset_number,
-        asset_class,
-        intender_name,
-        asset_description,
-        custodian_name,
-        serial_number,
-        mac_id,
-        location_id,
-        block,
-        model,
-        gr_number,
-        year_of_purchase,
-        capitalization_date,
-        expiry_date,
-        cost_center,
-        material_number,
-        accept_date,
-        po_number,
-        wbs_number,
-        installation_date,
-        asset_vendor,
-        department,
-        remarks
-      )
-      VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-        $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-        $21,$22,$23,$24,$25
-      )
-      RETURNING *
-      `,
-      [
-  assetId || null,              // 1
-  assetNumber || null,          // 2
-  subAssetNumber || null,       // 3
-  assetClass || null,           // 4
-  intenderName || null,         // 5
-  assetDescription || null,     // 6
-  custodianName || null,        // 7
-  serialNumber || null,         // 8
-  macId || null,                // 9
-  locationId || null,           // 10
-  block || null,                // 11
-  model || null,                // 12
-  grNumber || null,             // 13
-  yearOfPurchase || null,       // 14
-  formatDate(capitalizationDate), // 15
-  formatDate(expiryDate),         // 16
-  costCenter || null,             // 17  ✅ correct
-  materialNumber || null,         // 18  ✅ correct
-  formatDate(acceptDate),         // 19  ✅ correct
-  poNumber || null,               // 20
-  wbsNumber || null,              // 21
-  formatDate(installationDate),   // 22  ✅ correct
-  assetVendor || null,            // 23
-  department || null,             // 24
-  remarks || null                 // 25
-]
-    );
+   const result = await db.assetSAP.query(
+  `
+  INSERT INTO public."AssetMaster" (
+    "AssetID",
+     "Latitude",           -- ✅ ADD
+  "Longitude",
+    "MainAssetNumber",
+    "AssetSubNumber",
+    "AssetClass",
+    "AssetDescription",
+    "Indentor",
+    "AssetOwner",
+    "SerialNumber",
+    "MACID",
+    "LocationID",
+    "BLOCK",
+    "Model",
+    "GRNumber",
+    "YearofPurchase",
+    "CapitalizationDate",
+    "ExpiryDate",
+    "CostCenter",
+    "MaterialNumber",
+    "AcceptDatebyUser",
+    "POID",
+    "WBSNumberforReference",
+    "InstallationDateforReference",
+    "AssetSupplier",
+    "Department",
+    "Remarks"
+  )
+  VALUES (
+    $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
+    $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
+    $21,$22,$23,$24,$25,$26,$27
+  )
+  RETURNING *
+  `,
+  [
+    assetId || null,
+      req.body.latitude || null,         // 2 ✅
+  req.body.longitude || null, 
+    assetNumber || null,
+    subAssetNumber || null,
+    assetClass || null,
+    assetDescription || null,
+    intenderName || null,
+    custodianName || null,
+    serialNumber || null,
+    macId || null,
+    locationId || null,
+    block || null,
+    model || null,
+    grNumber || null,
+    yearOfPurchase || null,
+    formatDate(capitalizationDate),
+    formatDate(expiryDate),
+    costCenter || null,
+    materialNumber || null,
+    formatDate(acceptDate),
+    poNumber || null,
+    wbsNumber || null,
+    formatDate(installationDate),
+    assetVendor || null,
+    department || null,
+    remarks || null
+  ]
+);
 
     res.status(201).json(result.rows[0]);
+     console.log("Incoming Data:", req.body);
   } catch (error) {
     console.error("Insert Error:", error);
     res.status(500).json({ error: error.message });
@@ -155,38 +165,43 @@ router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query(
+    const result = await db.assetSAP.query(
       `
       SELECT
-        id AS "id",
-        asset_id AS "assetId",
-        asset_number AS "assetNumber",
-        sub_asset_number AS "subAssetNumber",
-        asset_class AS "assetClass",
-        asset_description AS "assetDescription",
-        intender_name AS "intenderName",
-        custodian_name AS "custodianName",
-        serial_number AS "serialNumber",
-        mac_id AS "macId",
-        location_id AS "locationId",
-        block AS "block",
-        model AS "model",
-        gr_number AS "grNumber",
-        year_of_purchase AS "yearOfPurchase",
-        capitalization_date AS "capitalizationDate",
-        expiry_date AS "expiryDate",
-        cost_center AS "costCenter",
-        material_number AS "materialNumber",
-        accept_date AS "acceptDate",
-        po_number AS "poNumber",
-        wbs_number AS "wbsNumber",
-        installation_date AS "installationDate",
-        asset_vendor AS "assetVendor",
-        department AS "department",
-        remarks AS "remarks",
-        created_at AS "createdAt"
-      FROM public.assets
-      WHERE id = $1
+        "SLNO" AS "id",
+        "AssetID" AS "assetId",
+        "Latitude" AS "latitude",
+        "Longitude" AS "longitude",
+        "Location" AS "location",
+        "Status" AS "status",
+        "LocationDesc" AS "locationDesc",
+        "AssetDesc" AS "assetDesc",
+        "MainAssetNumber" AS "assetNumber",
+        "AssetSubNumber" AS "subAssetNumber",
+        "AssetClass" AS "assetClass",
+        "AssetDescription" AS "assetDescription",
+        "Indentor" AS "intenderName",
+        "AssetOwner" AS "custodianName",
+        "SerialNumber" AS "serialNumber",
+        "MACID" AS "macId",
+        "LocationID" AS "locationId",
+        "BLOCK" AS "block",
+        "Model" AS "model",
+        "GRNumber" AS "grNumber",
+        "YearofPurchase" AS "yearOfPurchase",
+        "CapitalizationDate" AS "capitalizationDate",
+        "ExpiryDate" AS "expiryDate",
+        "CostCenter" AS "costCenter",
+        "MaterialNumber" AS "materialNumber",
+        "AcceptDatebyUser" AS "acceptDate",
+        "POID" AS "poNumber",
+        "WBSNumberforReference" AS "wbsNumber",
+        "InstallationDateforReference" AS "installationDate",
+        "AssetSupplier" AS "assetVendor",
+        "Department" AS "department",
+        "Remarks" AS "remarks"
+      FROM public."AssetMaster"
+      WHERE "SLNO" = $1
       `,
       [id]
     );
@@ -200,7 +215,10 @@ router.get("/:id", async (req, res) => {
 });
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
-  await pool.query("DELETE FROM assets WHERE id = $1", [id]);
+  await db.assetSAP.query(
+  'DELETE FROM public."AssetMaster" WHERE "SLNO" = $1',
+  [id]
+);
   res.json({ message: "Deleted successfully" });
 });
 router.put("/:id", async (req, res) => {
@@ -208,6 +226,8 @@ router.put("/:id", async (req, res) => {
 
 const {
   assetId,
+  latitude,
+  longitude,
   assetNumber,
   subAssetNumber,
   assetClass,
@@ -236,66 +256,70 @@ const {
 
 
   try {
-    const result = await pool.query(
-      `
-      UPDATE public.assets SET
-        asset_id = $1,
-        asset_number = $2,
-        sub_asset_number = $3,
-        asset_class = $4,
-        intender_name = $5,
-        asset_description = $6,
-        custodian_name = $7,
-        serial_number = $8,
-        mac_id = $9,
-        location_id = $10,
-        block = $11,
-        model = $12,
-        gr_number = $13,
-        year_of_purchase = $14,
-        capitalization_date = $15,
-        expiry_date = $16,
-        cost_center = $17,
-        material_number = $18,
-        accept_date = $19,
-        po_number = $20,
-        wbs_number = $21,
-        installation_date = $22,
-        asset_vendor = $23,
-        department = $24,
-        remarks = $25
-      WHERE id = $26
-      RETURNING *
-      `,
-   [
-  assetId || null,              // 1
-  assetNumber || null,          // 2
-  subAssetNumber || null,       // 3
-  assetClass || null,           // 4
-  intenderName || null,         // 5
-  assetDescription || null,     // 6
-  custodianName || null,        // 7
-  serialNumber || null,         // 8
-  macId || null,                // 9
-  locationId || null,           // 10
-  block || null,                // 11
-  model || null,                // 12
-  grNumber || null,             // 13
-  yearOfPurchase || null,       // 14
-  formatDate(capitalizationDate), // 15
-  formatDate(expiryDate),         // 16
-  costCenter || null,             // 17  ✅
-  materialNumber || null,         // 18  ✅
-  formatDate(acceptDate),         // 19  ✅
-  poNumber || null,               // 20
-  wbsNumber || null,              // 21
-  formatDate(installationDate),   // 22  ✅
-  assetVendor || null,            // 23
-  department || null,             // 24
-  remarks || null,                // 25
-  id                              // 26
-]
-    );
+   const result = await db.assetSAP.query(
+  `
+  UPDATE public."AssetMaster" SET
+    "AssetID" = $1,
+    "Latitude" = $2,
+    "Longitude" = $3,
+    "MainAssetNumber" = $4,
+    "AssetSubNumber" = $5,
+    "AssetClass" = $6,
+    "Indentor" = $7,
+    "AssetDescription" = $8,
+    "AssetOwner" = $9,
+    "SerialNumber" = $10,
+    "MACID" = $11,
+    "LocationID" = $12,
+    "BLOCK" = $13,
+    "Model" = $14,
+    "GRNumber" = $15,
+    "YearofPurchase" = $16,
+    "CapitalizationDate" = $17,
+    "ExpiryDate" = $18,
+    "CostCenter" = $19,
+    "MaterialNumber" = $20,
+    "AcceptDatebyUser" = $21,
+    "POID" = $22,
+    "WBSNumberforReference" = $23,
+    "InstallationDateforReference" = $24,
+    "AssetSupplier" = $25,
+    "Department" = $26,
+    "Remarks" = $27
+  WHERE "SLNO" = $28
+  RETURNING *
+  `,
+  [
+    assetId || null,
+    latitude || null,
+    longitude || null,
+    assetNumber || null,
+    subAssetNumber || null,
+    assetClass || null,
+    intenderName || null,
+    assetDescription || null,
+    custodianName || null,
+    serialNumber || null,
+    macId || null,
+    locationId || null,
+    block || null,
+    model || null,
+    grNumber || null,
+    yearOfPurchase || null,
+    formatDate(capitalizationDate),
+    formatDate(expiryDate),
+    costCenter || null,
+    materialNumber || null,
+    formatDate(acceptDate),
+    poNumber || null,
+    wbsNumber || null,
+    formatDate(installationDate),
+    assetVendor || null,
+    department || null,
+    remarks || null,
+    id
+  ]
+);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "Asset not found" });
